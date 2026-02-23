@@ -15,7 +15,8 @@ import {
   Laptop,
   X,
   Plus,
-  Download
+  Download,
+  Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
@@ -114,6 +115,9 @@ const getRowValue = (row: any, patterns: string[]): string | null => {
 };
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
   const [sources, setSources] = useState<CSVSource[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -377,6 +381,95 @@ export default function App() {
       prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
     );
   };
+
+  // Password validation
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Change this password to your desired password
+    const APP_PASSWORD = import.meta.env.VITE_APP_PASSWORD as string;
+    
+    if (passwordInput === APP_PASSWORD) {
+      setIsAuthenticated(true);
+      setPasswordError(false);
+      setPasswordInput('');
+    } else {
+      setPasswordError(true);
+      setPasswordInput('');
+    }
+  };
+
+  // If not authenticated, show password screen
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0B5AA8] via-[#40A7DB] to-[#0B5AA8] flex items-center justify-center p-4">
+        <motion.div 
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="w-full max-w-md"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-[#0B5AA8] to-[#40A7DB] px-8 py-6 text-center">
+              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+                <Lock className="w-8 h-8 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold text-white mb-2">AssetLink</h1>
+              <p className="text-white/80 text-sm font-medium">Cross-CSV Inventory Auditor</p>
+            </div>
+            
+            <form onSubmit={handlePasswordSubmit} className="p-8">
+              <div className="mb-6">
+                <label htmlFor="password" className="block text-sm font-bold text-slate-700 mb-2">
+                  Enter Password to Continue
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    setPasswordError(false);
+                  }}
+                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all ${
+                    passwordError 
+                      ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-200' 
+                      : 'border-slate-200 focus:border-[#40A7DB] focus:ring-[#40A7DB]/20'
+                  }`}
+                  placeholder="Enter password"
+                  autoFocus
+                />
+                {passwordError && (
+                  <motion.p 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-rose-500 text-sm font-medium mt-2 flex items-center gap-2"
+                  >
+                    <AlertCircle className="w-4 h-4" />
+                    Incorrect password. Please try again.
+                  </motion.p>
+                )}
+              </div>
+              
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-[#0B5AA8] to-[#40A7DB] hover:from-[#004B9B] hover:to-[#0B5AA8] text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+              >
+                <ShieldCheck className="w-5 h-5" />
+                Unlock Application
+              </button>
+            </form>
+
+            <div className="px-8 pb-8">
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                <p className="text-xs text-slate-500 text-center">
+                  <span className="font-bold text-slate-700">Secure Access:</span> This application handles sensitive asset data. Only authorized personnel should access this tool.
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
